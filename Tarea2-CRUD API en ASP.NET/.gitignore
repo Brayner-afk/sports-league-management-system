@@ -7,7 +7,7 @@
 *.sln.docstates
 # Test results
 TestResults/
-# Entity Framework migrations (keep these!)
+# Entity Framework migrations 
 # !Migrations/
 # User-specific files
 .idea/
