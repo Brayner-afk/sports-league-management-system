@@ -1,0 +1,21 @@
+﻿## Visual Studio 2022 / .NET Ignore
+.vs/
+[Bb]in/
+[Oo]bj/
+*.user
+*.userosscache
+*.sln.docstates
+# Test results
+TestResults/
+# Entity Framework migrations 
+# !Migrations/
+# User-specific files
+.idea/
+.vscode/
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
+*.userprefs
+# Local config
+appsettings.Development.json
