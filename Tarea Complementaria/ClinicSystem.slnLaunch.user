@@ -1,0 +1,15 @@
+[
+  {
+    "Name": "New Profile",
+    "Projects": [
+      {
+        "Path": "ClinicSystem.Api\\ClinicSystem.Api.csproj",
+        "Action": "Start"
+      },
+      {
+        "Path": "ClinicSystem.Client\\ClinicSystem.Client.csproj",
+        "Action": "Start"
+      }
+    ]
+  }
+]

@@ -1,0 +1,233 @@
+@page "/pacientes"
+@inject HttpClient Http
+
+<h3 class="mb-4">Gestión de Pacientes</h3>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error:</strong> @errorMessage
+        <button type="button" class="btn-close" @onclick="() => errorMessage = null" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">@(currentPaciente.Id == 0 ? "Registrar Nuevo Paciente" : "Editar Paciente")</h5>
+    </div>
+    <div class="card-body">
+        <EditForm Model="currentPaciente" OnValidSubmit="SavePaciente">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger mb-3" />
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label font-weight-bold">Nombre Completo</label>
+                    <InputText @bind-Value="currentPaciente.NombreCompleto" class="form-control" placeholder="Ej. Juan Pérez" />
+                    <ValidationMessage For="() => currentPaciente.NombreCompleto" class="text-danger" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label font-weight-bold">Documento de Identidad</label>
+                    <InputText @bind-Value="currentPaciente.DocumentoIdentidad" class="form-control" placeholder="Ej. 001-0000000-0" />
+                    <ValidationMessage For="() => currentPaciente.DocumentoIdentidad" class="text-danger" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-weight-bold">Fecha de Nacimiento</label>
+                    <InputDate @bind-Value="currentPaciente.FechaNacimiento" class="form-control" />
+                    <ValidationMessage For="() => currentPaciente.FechaNacimiento" class="text-danger" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-weight-bold">Teléfono</label>
+                    <InputText @bind-Value="currentPaciente.Telefono" class="form-control" placeholder="Ej. 809-555-1234" />
+                    <ValidationMessage For="() => currentPaciente.Telefono" class="text-danger" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-weight-bold">Dirección</label>
+                    <InputText @bind-Value="currentPaciente.Direccion" class="form-control" placeholder="Ej. Calle 10, No. 5" />
+                    <ValidationMessage For="() => currentPaciente.Direccion" class="text-danger" />
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                @if (currentPaciente.Id != 0)
+                {
+                    <button type="button" class="btn btn-secondary me-2" @onclick="CancelEdit">Cancelar</button>
+                }
+                <button type="submit" class="btn btn-success">
+                    Guardar Paciente
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Listado de Pacientes</h5>
+        <button class="btn btn-sm btn-light" @onclick="LoadPacientes">
+            Actualizar
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">ID</th>
+                        <th>Nombre Completo</th>
+                        <th>Cédula/Documento</th>
+                        <th>F. Nacimiento</th>
+                        <th>Teléfono</th>
+                        <th>Dirección</th>
+                        <th class="text-end pe-3">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (pacientes == null)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <div class="mt-2 text-muted">Cargando pacientes...</div>
+                            </td>
+                        </tr>
+                    }
+                    else if (!pacientes.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                No hay pacientes registrados.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var p in pacientes)
+                        {
+                            <tr>
+                                <td class="ps-3">@p.Id</td>
+                                <td class="fw-bold text-primary">@p.NombreCompleto</td>
+                                <td>@p.DocumentoIdentidad</td>
+                                <td>@p.FechaNacimiento.ToString("dd/MM/yyyy")</td>
+                                <td>@p.Telefono</td>
+                                <td>@p.Direccion</td>
+                                <td class="text-end pe-3">
+                                    <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => EditPaciente(p)">
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeletePaciente(p.Id)">
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<PacienteDto>? pacientes;
+    private PacienteDto currentPaciente = new PacienteDto { FechaNacimiento = DateTime.Today.AddYears(-30) };
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadPacientes();
+    }
+
+    private async Task LoadPacientes()
+    {
+        try
+        {
+            errorMessage = null;
+            pacientes = await Http.GetFromJsonAsync<List<PacienteDto>>("api/pacientes");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "No se pudo conectar con el servidor API. Verifique que la API esté en ejecución. Detalles: " + ex.Message;
+        }
+    }
+
+    private async Task SavePaciente()
+    {
+        try
+        {
+            errorMessage = null;
+            HttpResponseMessage response;
+
+            if (currentPaciente.Id == 0)
+            {
+                response = await Http.PostAsJsonAsync("api/pacientes", currentPaciente);
+            }
+            else
+            {
+                response = await Http.PutAsJsonAsync($"api/pacientes/{currentPaciente.Id}", currentPaciente);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                currentPaciente = new PacienteDto { FechaNacimiento = DateTime.Today.AddYears(-30) };
+                await LoadPacientes();
+            }
+            else
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error al intentar guardar: " + ex.Message;
+        }
+    }
+
+    private void EditPaciente(PacienteDto p)
+    {
+        currentPaciente = new PacienteDto
+        {
+            Id = p.Id,
+            NombreCompleto = p.NombreCompleto,
+            DocumentoIdentidad = p.DocumentoIdentidad,
+            FechaNacimiento = p.FechaNacimiento,
+            Telefono = p.Telefono,
+            Direccion = p.Direccion
+        };
+    }
+
+    private async Task DeletePaciente(int id)
+    {
+        try
+        {
+            errorMessage = null;
+            var response = await Http.DeleteAsync($"api/pacientes/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                if (currentPaciente.Id == id)
+                {
+                    CancelEdit();
+                }
+                await LoadPacientes();
+            }
+            else
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error al intentar eliminar: " + ex.Message;
+        }
+    }
+
+    private void CancelEdit()
+    {
+        currentPaciente = new PacienteDto { FechaNacimiento = DateTime.Today.AddYears(-30) };
+    }
+}

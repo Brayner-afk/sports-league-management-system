@@ -1,0 +1,32 @@
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Application.deps.json
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Application.dll
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Application.pdb
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Domain.dll
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Domain.pdb
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.csproj.AssemblyReference.cache
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.AssemblyInfoInputs.cache
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.AssemblyInfo.cs
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.csproj.CoreCompileInputs.cache
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.sourcelink.json
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSy.98EE9625.Up2Date
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.dll
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\refint\ClinicSystem.Application.dll
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.pdb
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea4-Capa de Servicios-SportsLeague\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ref\ClinicSystem.Application.dll
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Application.deps.json
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Application.dll
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Application.pdb
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Domain.dll
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\bin\Debug\net9.0\ClinicSystem.Domain.pdb
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.csproj.AssemblyReference.cache
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.GeneratedMSBuildEditorConfig.editorconfig
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.AssemblyInfoInputs.cache
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.AssemblyInfo.cs
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.csproj.CoreCompileInputs.cache
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.sourcelink.json
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSy.98EE9625.Up2Date
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.dll
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\refint\ClinicSystem.Application.dll
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ClinicSystem.Application.pdb
+C:\Trabajos Itla\ItlaGitWorks\HomeWorksP2\sports-league-management-system\Tarea Complementaria\ClinicSystem.Application\obj\Debug\net9.0\ref\ClinicSystem.Application.dll

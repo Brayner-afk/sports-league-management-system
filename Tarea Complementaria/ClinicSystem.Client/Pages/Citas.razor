@@ -1,0 +1,278 @@
+@page "/citas"
+@inject HttpClient Http
+
+<h3 class="mb-4">Gestión de Citas Médicas</h3>
+
+@if (errorMessage != null)
+{
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <strong>Error:</strong> @errorMessage
+        <button type="button" class="btn-close" @onclick="() => errorMessage = null" aria-label="Close"></button>
+    </div>
+}
+
+<div class="card mb-4 shadow-sm">
+    <div class="card-header bg-primary text-white">
+        <h5 class="mb-0">@(currentCita.Id == 0 ? "Programar Nueva Cita" : "Editar Cita")</h5>
+    </div>
+    <div class="card-body">
+        <EditForm Model="currentCita" OnValidSubmit="SaveCita">
+            <DataAnnotationsValidator />
+            <ValidationSummary class="text-danger mb-3" />
+
+            <div class="row">
+                <div class="col-md-6 mb-3">
+                    <label class="form-label font-weight-bold">Paciente</label>
+                    <select class="form-select" @bind="currentCita.PacienteId">
+                        <option value="0">-- Seleccione un Paciente --</option>
+                        @if (pacientes != null)
+                        {
+                            @foreach (var p in pacientes)
+                            {
+                                <option value="@p.Id">@p.NombreCompleto - @p.DocumentoIdentidad</option>
+                            }
+                        }
+                    </select>
+                    <ValidationMessage For="() => currentCita.PacienteId" class="text-danger" />
+                </div>
+                <div class="col-md-6 mb-3">
+                    <label class="form-label font-weight-bold">Médico</label>
+                    <select class="form-select" @bind="currentCita.MedicoId">
+                        <option value="0">-- Seleccione un Médico --</option>
+                        @if (medicos != null)
+                        {
+                            @foreach (var m in medicos)
+                            {
+                                <option value="@m.Id">@m.NombreCompleto</option>
+                            }
+                        }
+                    </select>
+                    <ValidationMessage For="() => currentCita.MedicoId" class="text-danger" />
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-weight-bold">Fecha y Hora</label>
+                    <input type="datetime-local" class="form-control" @bind="currentCita.FechaHora" />
+                    <ValidationMessage For="() => currentCita.FechaHora" class="text-danger" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-weight-bold">Estado</label>
+                    <InputSelect @bind-Value="currentCita.Estado" class="form-select">
+                        <option value="Pendiente">Pendiente</option>
+                        <option value="Completada">Completada</option>
+                        <option value="Cancelada">Cancelada</option>
+                    </InputSelect>
+                    <ValidationMessage For="() => currentCita.Estado" class="text-danger" />
+                </div>
+                <div class="col-md-4 mb-3">
+                    <label class="form-label font-weight-bold">Motivo de la Cita</label>
+                    <InputText @bind-Value="currentCita.Motivo" class="form-control" placeholder="Ej. Consulta general, dolor de cabeza" />
+                    <ValidationMessage For="() => currentCita.Motivo" class="text-danger" />
+                </div>
+            </div>
+
+            <div class="d-flex justify-content-end">
+                @if (currentCita.Id != 0)
+                {
+                    <button type="button" class="btn btn-secondary me-2" @onclick="CancelEdit">Cancelar</button>
+                }
+                <button type="submit" class="btn btn-success">
+                    Programar Cita
+                </button>
+            </div>
+        </EditForm>
+    </div>
+</div>
+
+<div class="card shadow-sm">
+    <div class="card-header bg-dark text-white d-flex justify-content-between align-items-center">
+        <h5 class="mb-0">Listado de Citas Programadas</h5>
+        <button class="btn btn-sm btn-light" @onclick="RefreshAll">
+            Actualizar Todo
+        </button>
+    </div>
+    <div class="card-body p-0">
+        <div class="table-responsive">
+            <table class="table table-hover table-striped mb-0">
+                <thead class="table-light">
+                    <tr>
+                        <th class="ps-3">ID</th>
+                        <th>Fecha y Hora</th>
+                        <th>Paciente</th>
+                        <th>Médico</th>
+                        <th>Motivo</th>
+                        <th>Estado</th>
+                        <th class="text-end pe-3">Acciones</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @if (citas == null)
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4">
+                                <div class="spinner-border text-primary" role="status">
+                                    <span class="visually-hidden">Cargando...</span>
+                                </div>
+                                <div class="mt-2 text-muted">Cargando citas...</div>
+                            </td>
+                        </tr>
+                    }
+                    else if (!citas.Any())
+                    {
+                        <tr>
+                            <td colspan="7" class="text-center py-4 text-muted">
+                                No hay citas registradas en el sistema.
+                            </td>
+                        </tr>
+                    }
+                    else
+                    {
+                        @foreach (var c in citas)
+                        {
+                            <tr>
+                                <td class="ps-3">@c.Id</td>
+                                <td class="fw-bold">@c.FechaHora.ToString("dd/MM/yyyy hh:mm tt")</td>
+                                <td>@c.PacienteNombre</td>
+                                <td>@c.MedicoNombre</td>
+                                <td>@c.Motivo</td>
+                                <td>
+                                    <span class="badge @(GetBadgeClass(c.Estado))">@c.Estado</span>
+                                </td>
+                                <td class="text-end pe-3">
+                                    <button class="btn btn-sm btn-outline-warning me-1" @onclick="() => EditCita(c)">
+                                        Editar
+                                    </button>
+                                    <button class="btn btn-sm btn-outline-danger" @onclick="() => DeleteCita(c.Id)">
+                                        Eliminar
+                                    </button>
+                                </td>
+                            </tr>
+                        }
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<CitaDto>? citas;
+    private List<PacienteDto>? pacientes;
+    private List<MedicoDto>? medicos;
+
+    private CitaDto currentCita = new CitaDto { FechaHora = DateTime.Now.AddDays(1), Estado = "Pendiente" };
+    private string? errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        await RefreshAll();
+    }
+
+    private async Task RefreshAll()
+    {
+        try
+        {
+            errorMessage = null;
+            citas = await Http.GetFromJsonAsync<List<CitaDto>>("api/citas");
+            pacientes = await Http.GetFromJsonAsync<List<PacienteDto>>("api/pacientes");
+            medicos = await Http.GetFromJsonAsync<List<MedicoDto>>("api/medicos");
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error de conexión con la API: " + ex.Message;
+        }
+    }
+
+    private async Task SaveCita()
+    {
+        try
+        {
+            errorMessage = null;
+            HttpResponseMessage response;
+
+            if (currentCita.PacienteId == 0 || currentCita.MedicoId == 0)
+            {
+                errorMessage = "Debe seleccionar un Paciente y un Médico.";
+                return;
+            }
+
+            if (currentCita.Id == 0)
+            {
+                response = await Http.PostAsJsonAsync("api/citas", currentCita);
+            }
+            else
+            {
+                response = await Http.PutAsJsonAsync($"api/citas/{currentCita.Id}", currentCita);
+            }
+
+            if (response.IsSuccessStatusCode)
+            {
+                currentCita = new CitaDto { FechaHora = DateTime.Now.AddDays(1), Estado = "Pendiente" };
+                await RefreshAll();
+            }
+            else
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error al guardar: " + ex.Message;
+        }
+    }
+
+    private void EditCita(CitaDto c)
+    {
+        currentCita = new CitaDto
+        {
+            Id = c.Id,
+            FechaHora = c.FechaHora,
+            Motivo = c.Motivo,
+            Estado = c.Estado,
+            PacienteId = c.PacienteId,
+            MedicoId = c.MedicoId
+        };
+    }
+
+    private async Task DeleteCita(int id)
+    {
+        try
+        {
+            errorMessage = null;
+            var response = await Http.DeleteAsync($"api/citas/{id}");
+            if (response.IsSuccessStatusCode)
+            {
+                if (currentCita.Id == id)
+                {
+                    CancelEdit();
+                }
+                await RefreshAll();
+            }
+            else
+            {
+                errorMessage = await response.Content.ReadAsStringAsync();
+            }
+        }
+        catch (Exception ex)
+        {
+            errorMessage = "Error al eliminar: " + ex.Message;
+        }
+    }
+
+    private void CancelEdit()
+    {
+        currentCita = new CitaDto { FechaHora = DateTime.Now.AddDays(1), Estado = "Pendiente" };
+    }
+
+    private string GetBadgeClass(string estado)
+    {
+        return estado switch
+        {
+            "Completada" => "bg-success",
+            "Cancelada" => "bg-danger",
+            _ => "bg-warning text-dark"
+        };
+    }
+}

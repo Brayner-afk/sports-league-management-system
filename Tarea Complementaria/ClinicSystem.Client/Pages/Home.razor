@@ -1,0 +1,33 @@
+@page "/"
+
+<PageTitle>Inicio - Sistema Clínico</PageTitle>
+
+<div class="p-5 mb-4 bg-light rounded-3 shadow-sm border">
+    <div class="container-fluid py-5">
+        <h1 class="display-5 fw-bold text-primary">Sistema de Gestión Clínica</h1>
+        <p class="col-md-8 fs-4">Bienvenido al panel administrativo. Desde aquí podrá gestionar el registro de pacientes, asignación de médicos, programación de citas, historiales médicos y facturación del centro de salud.</p>
+        <hr class="my-4">
+        <p>Implementado bajo una arquitectura desacoplada de N-Capas con API en .NET y frontend Blazor WebAssembly.</p>
+    </div>
+</div>
+
+<div class="row">
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-primary">
+            <div class="card-body">
+                <h5 class="card-title text-primary">Módulo de Pacientes</h5>
+                <p class="card-text">Registre la información personal de los pacientes, controle sus datos de contacto y consulte sus detalles clínicos.</p>
+                <a href="pacientes" class="btn btn-outline-primary">Gestionar Pacientes</a>
+            </div>
+        </div>
+    </div>
+    <div class="col-md-6 mb-4">
+        <div class="card h-100 shadow-sm border-success">
+            <div class="card-body">
+                <h5 class="card-title text-success">Citas Médicas</h5>
+                <p class="card-text">Programe y controle las citas médicas con validación de disponibilidad y control de colisiones de horarios para los médicos.</p>
+                <a href="citas" class="btn btn-outline-success">Gestionar Citas</a>
+            </div>
+        </div>
+    </div>
+</div>
