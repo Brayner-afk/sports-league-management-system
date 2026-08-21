@@ -1,0 +1,251 @@
+﻿@page "/teams/{Id:int}"
+@inject ISportsLeagueApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Detalles del Equipo - Sports League MS</PageTitle>
+
+<div class="mb-4">
+    <a href="teams" class="btn btn-sports-dark btn-sm mb-3">
+        <i class="bi bi-arrow-left me-1"></i> Volver a Equipos
+    </a>
+</div>
+
+<ToastAlert Message="@alertMessage" Type="@alertType" OnDismiss="@(() => alertMessage = null)" />
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="text-white-50 mt-3">Cargando información del equipo...</p>
+    </div>
+}
+else if (team == null)
+{
+    <div class="sports-card text-center py-5">
+        <i class="bi bi-exclamation-circle text-warning display-4 d-block mb-3"></i>
+        <h3 class="text-white">Equipo No Encontrado</h3>
+        <p class="text-white-50">El equipo solicitado con ID #@Id no existe en la base de datos.</p>
+        <a href="teams" class="btn btn-yellow mt-2">Volver a la Lista</a>
+    </div>
+}
+else
+{
+    <!-- Encabezado del Equipo -->
+    <div class="sports-card mb-4" style="background: linear-gradient(135deg, var(--c-black-card) 0%, #1A1E29 100%);">
+        <div class="row align-items-center">
+            <div class="col-md-8">
+                <div class="d-flex align-items-center gap-3 mb-2">
+                    <div class="stat-icon-wrapper" style="width: 60px; height: 60px; font-size: 1.8rem;">
+                        <i class="bi bi-shield-fill-check"></i>
+                    </div>
+                    <div>
+                        <span class="badge badge-yellow mb-1">Franquicia Oficial #@team.Id</span>
+                        <h1 class="display-6 fw-bold text-white m-0">@team.Name</h1>
+                    </div>
+                </div>
+                <p class="text-white-50 d-flex align-items-center gap-2 mt-2 mb-0">
+                    <i class="bi bi-geo-alt-fill text-warning"></i>
+                    <span>Sede: <strong>@team.City</strong></span>
+                    <span class="text-muted">|</span>
+                    <i class="bi bi-people-fill text-warning"></i>
+                    <span>Total Jugadores: <strong>@teamPlayers.Count</strong></span>
+                </p>
+            </div>
+            <div class="col-md-4 text-md-end mt-3 mt-md-0">
+                <button class="btn btn-yellow" @onclick="OpenAddPlayerModal">
+                    <i class="bi bi-person-plus-fill me-1"></i> Fichar Jugador
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Roster de Jugadores -->
+    <div class="sports-card">
+        <div class="sports-card-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-people-fill text-warning fs-5"></i>
+                <h3 class="sports-card-title">Roster Oficial de Jugadores</h3>
+            </div>
+            <span class="badge badge-gray">@teamPlayers.Count Integrantes</span>
+        </div>
+
+        @if (!teamPlayers.Any())
+        {
+            <div class="text-center py-5 text-white-50">
+                <i class="bi bi-person-x display-5 d-block mb-3"></i>
+                <h5>No hay jugadores fichados en este equipo</h5>
+                <p class="small">Haz clic en "Fichar Jugador" para registrar a los integrantes del equipo.</p>
+                <button class="btn btn-yellow btn-sm" @onclick="OpenAddPlayerModal">
+                    <i class="bi bi-plus-lg me-1"></i> Agregar Jugador
+                </button>
+            </div>
+        }
+        else
+        {
+            <div class="row g-3">
+                @foreach (var player in teamPlayers)
+                {
+                    <div class="col-md-6 col-lg-4">
+                        <div class="p-3 rounded-3" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <div class="d-flex align-items-center gap-2">
+                                    <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 36px; height: 36px; background-color: var(--c-yellow-subtle); color: var(--c-yellow-primary);">
+                                        <i class="bi bi-person-fill"></i>
+                                    </div>
+                                    <div>
+                                        <h6 class="text-white fw-bold mb-0">@player.FullName</h6>
+                                        <small class="text-white-50">ID #@player.Id</small>
+                                    </div>
+                                </div>
+                                <span class="badge badge-yellow">@player.Position</span>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+    </div>
+}
+
+<!-- Modal para Crear Jugador en este Equipo -->
+@if (isPlayerModalOpen)
+{
+    <div class="sports-modal-backdrop" @onclick="() => isPlayerModalOpen = false">
+        <div class="sports-modal-content" @onclick:stopPropagation="true">
+            <div class="sports-modal-header">
+                <h5 class="m-0 text-white font-weight-bold">
+                    <i class="bi bi-person-plus-fill text-warning me-2"></i>
+                    Fichar Jugador para @team?.Name
+                </h5>
+                <button type="button" class="btn-action-icon" @onclick="() => isPlayerModalOpen = false">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            
+            <EditForm Model="@newPlayer" OnValidSubmit="SavePlayer">
+                <DataAnnotationsValidator />
+                <div class="sports-modal-body">
+                    <div class="mb-3">
+                        <label class="sports-label">Nombre Completo del Jugador *</label>
+                        <InputText class="sports-input" @bind-Value="newPlayer.FullName" placeholder="Ej. Juan Soto" />
+                        <ValidationMessage For="@(() => newPlayer.FullName)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="sports-label">Posición Deportiva *</label>
+                        <InputText class="sports-input" @bind-Value="newPlayer.Position" placeholder="Ej. Jardinero Derecho, Delantero, Base..." />
+                        <ValidationMessage For="@(() => newPlayer.Position)" class="text-danger small mt-1" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(formErrorMessage))
+                    {
+                        <div class="p-3 bg-danger bg-opacity-25 border border-danger rounded-3 text-danger small">
+                            <i class="bi bi-exclamation-octagon-fill me-1"></i> @formErrorMessage
+                        </div>
+                    }
+                </div>
+
+                <div class="sports-modal-footer">
+                    <button type="button" class="btn btn-sports-dark" @onclick="() => isPlayerModalOpen = false">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-yellow" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg me-1"></i>
+                            <span>Fichar Jugador</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public int Id { get; set; }
+
+    private TeamDto? team;
+    private List<PlayerDto> teamPlayers = new();
+    private bool isLoading = true;
+
+    private bool isPlayerModalOpen = false;
+    private bool isSubmitting = false;
+    private PlayerDto newPlayer = new();
+    private string? formErrorMessage;
+
+    private string? alertMessage;
+    private AlertType alertType = AlertType.Info;
+
+    protected override async Task OnParametersSetAsync()
+    {
+        await LoadTeamDetails();
+    }
+
+    private async Task LoadTeamDetails()
+    {
+        isLoading = true;
+        try
+        {
+            var teamTask = ApiService.GetTeamByIdAsync(Id);
+            var playersTask = ApiService.GetPlayersAsync(Id);
+
+            await Task.WhenAll(teamTask, playersTask);
+
+            team = await teamTask;
+            teamPlayers = (await playersTask).ToList();
+        }
+        catch (Exception ex)
+        {
+            alertMessage = $"Error cargando equipo: {ex.Message}";
+            alertType = AlertType.Error;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenAddPlayerModal()
+    {
+        newPlayer = new PlayerDto
+        {
+            TeamId = this.Id,
+            FullName = "",
+            Position = ""
+        };
+        formErrorMessage = null;
+        isPlayerModalOpen = true;
+    }
+
+    private async Task SavePlayer()
+    {
+        isSubmitting = true;
+        formErrorMessage = null;
+        try
+        {
+            newPlayer.TeamId = this.Id;
+            var created = await ApiService.CreatePlayerAsync(newPlayer);
+            if (created != null)
+            {
+                alertMessage = $"Jugador '{created.FullName}' fichado exitosamente en {team?.Name}.";
+                alertType = AlertType.Success;
+                isPlayerModalOpen = false;
+                await LoadTeamDetails();
+            }
+        }
+        catch (Exception ex)
+        {
+            formErrorMessage = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+}

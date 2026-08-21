@@ -1,0 +1,372 @@
+﻿@page "/players"
+@inject ISportsLeagueApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Jugadores - Sports League MS</PageTitle>
+
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="display-6 fw-bold text-white mb-1">
+            <i class="bi bi-people-fill text-warning me-2"></i>Gestión de Jugadores
+        </h1>
+        <p class="text-white-50 m-0">Administra los atletas registrados y su asignación a los equipos de la liga.</p>
+    </div>
+    <div>
+        <button class="btn btn-yellow" @onclick="OpenCreateModal">
+            <i class="bi bi-person-plus-fill"></i>
+            <span>Nuevo Jugador</span>
+        </button>
+    </div>
+</div>
+
+<ToastAlert Message="@alertMessage" Type="@alertType" OnDismiss="@(() => alertMessage = null)" />
+
+<!-- Filtros de Búsqueda -->
+<div class="sports-card mb-4">
+    <div class="row g-3 align-items-center">
+        <div class="col-md-5">
+            <div class="position-relative">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" class="sports-input ps-5" placeholder="Buscar jugador por nombre o posición..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+        </div>
+        <div class="col-md-4">
+            <select class="sports-input" @bind="selectedTeamFilter">
+                <option value="0">Todos los Equipos</option>
+                @foreach (var team in teams)
+                {
+                    <option value="@team.Id">@team.Name (@team.City)</option>
+                }
+            </select>
+        </div>
+        <div class="col-md-3 d-flex gap-2 justify-content-md-end">
+            <button class="btn btn-sports-dark w-100" @onclick="LoadData">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refrescar
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="text-white-50 mt-3">Cargando jugadores...</p>
+    </div>
+}
+else if (!FilteredPlayers.Any())
+{
+    <div class="sports-card text-center py-5">
+        <i class="bi bi-person-x text-white-50 display-4 d-block mb-3"></i>
+        <h4 class="text-white">No se encontraron jugadores</h4>
+        <p class="text-white-50">Intenta cambiar los filtros de búsqueda o registra un nuevo jugador.</p>
+        <button class="btn btn-yellow mt-2" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-lg me-1"></i> Registrar Jugador
+        </button>
+    </div>
+}
+else
+{
+    <div class="sports-table-container">
+        <table class="sports-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre Completo</th>
+                    <th>Posición</th>
+                    <th>Equipo Perteneciente</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var player in FilteredPlayers)
+                {
+                    <tr>
+                        <td class="text-white-50">#@player.Id</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <div class="rounded-circle d-flex align-items-center justify-content-center" style="width: 32px; height: 32px; background-color: var(--c-yellow-subtle); color: var(--c-yellow-primary);">
+                                    <i class="bi bi-person-fill"></i>
+                                </div>
+                                <strong class="text-white">@player.FullName</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-gray">@player.Position</span>
+                        </td>
+                        <td>
+                            <span class="badge badge-yellow">
+                                <i class="bi bi-shield-shaded me-1"></i>@(player.TeamName ?? GetTeamName(player.TeamId))
+                            </span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                <button class="btn-action-icon" style="width: 32px; height: 32px;" title="Editar Jugador" @onclick="() => OpenEditModal(player)">
+                                    <i class="bi bi-pencil" style="font-size: 0.85rem;"></i>
+                                </button>
+                                <button class="btn-action-icon danger" style="width: 32px; height: 32px;" title="Eliminar Jugador" @onclick="() => OpenDeleteModal(player)">
+                                    <i class="bi bi-trash3" style="font-size: 0.85rem;"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<!-- Modal para Crear / Editar Jugador -->
+@if (isModalOpen)
+{
+    <div class="sports-modal-backdrop" @onclick="CloseModal">
+        <div class="sports-modal-content" @onclick:stopPropagation="true">
+            <div class="sports-modal-header">
+                <h5 class="m-0 text-white font-weight-bold">
+                    <i class="bi @(isEditing ? "bi-pencil-square" : "bi-person-plus-fill") text-warning me-2"></i>
+                    @(isEditing ? "Editar Jugador" : "Nuevo Jugador")
+                </h5>
+                <button type="button" class="btn-action-icon" @onclick="CloseModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            
+            <EditForm Model="@editingPlayer" OnValidSubmit="SavePlayer">
+                <DataAnnotationsValidator />
+                <div class="sports-modal-body">
+                    <div class="mb-3">
+                        <label class="sports-label">Nombre Completo *</label>
+                        <InputText class="sports-input" @bind-Value="editingPlayer.FullName" placeholder="Ej. Juan Soto" />
+                        <ValidationMessage For="@(() => editingPlayer.FullName)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="sports-label">Posición Deportiva *</label>
+                        <InputText class="sports-input" @bind-Value="editingPlayer.Position" placeholder="Ej. Jardinero Derecho, Delantero, Base..." />
+                        <ValidationMessage For="@(() => editingPlayer.Position)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="sports-label">Equipo Asignado *</label>
+                        <select class="sports-input" @bind="editingPlayer.TeamId">
+                            <option value="0">-- Seleccionar Equipo --</option>
+                            @foreach (var team in teams)
+                            {
+                                <option value="@team.Id">@team.Name (@team.City)</option>
+                            }
+                        </select>
+                        <ValidationMessage For="@(() => editingPlayer.TeamId)" class="text-danger small mt-1" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(formErrorMessage))
+                    {
+                        <div class="p-3 bg-danger bg-opacity-25 border border-danger rounded-3 text-danger small">
+                            <i class="bi bi-exclamation-octagon-fill me-1"></i> @formErrorMessage
+                        </div>
+                    }
+                </div>
+
+                <div class="sports-modal-footer">
+                    <button type="button" class="btn btn-sports-dark" @onclick="CloseModal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-yellow" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg me-1"></i>
+                            <span>@(isEditing ? "Actualizar" : "Guardar Jugador")</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<!-- Modal de Confirmación de Eliminación -->
+<ConfirmModal 
+    IsOpen="@isDeleteModalOpen"
+    Title="Eliminar Jugador"
+    Message="¿Está seguro de que desea eliminar este jugador de la base de datos de la liga?"
+    ItemName="@playerToDelete?.FullName"
+    ConfirmButtonText="Eliminar Jugador"
+    OnConfirm="ConfirmDelete"
+    OnCancel="() => isDeleteModalOpen = false" />
+
+@code {
+    private List<PlayerDto> players = new();
+    private List<TeamDto> teams = new();
+    private bool isLoading = true;
+    private string searchTerm = "";
+    private int selectedTeamFilter = 0;
+
+    // Modales y formularios
+    private bool isModalOpen = false;
+    private bool isEditing = false;
+    private bool isSubmitting = false;
+    private PlayerDto editingPlayer = new();
+    private string? formErrorMessage;
+
+    // Eliminación
+    private bool isDeleteModalOpen = false;
+    private PlayerDto? playerToDelete;
+
+    // Notificaciones
+    private string? alertMessage;
+    private AlertType alertType = AlertType.Info;
+
+    private IEnumerable<PlayerDto> FilteredPlayers =>
+        players.Where(p => 
+            (selectedTeamFilter == 0 || p.TeamId == selectedTeamFilter) &&
+            (string.IsNullOrWhiteSpace(searchTerm) || 
+             p.FullName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+             p.Position.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) ||
+             (p.TeamName != null && p.TeamName.Contains(searchTerm, StringComparison.OrdinalIgnoreCase))));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            var teamsTask = ApiService.GetTeamsAsync();
+            var playersTask = ApiService.GetPlayersAsync();
+
+            await Task.WhenAll(teamsTask, playersTask);
+
+            teams = (await teamsTask).ToList();
+            players = (await playersTask).ToList();
+        }
+        catch (Exception ex)
+        {
+            alertMessage = $"Error cargando datos: {ex.Message}";
+            alertType = AlertType.Error;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private string GetTeamName(int teamId)
+    {
+        var team = teams.FirstOrDefault(t => t.Id == teamId);
+        return team?.Name ?? $"Equipo #{teamId}";
+    }
+
+    private void OpenCreateModal()
+    {
+        editingPlayer = new PlayerDto
+        {
+            TeamId = teams.FirstOrDefault()?.Id ?? 0
+        };
+        isEditing = false;
+        formErrorMessage = null;
+        isModalOpen = true;
+    }
+
+    private void OpenEditModal(PlayerDto player)
+    {
+        editingPlayer = new PlayerDto(player.Id, player.FullName, player.Position, player.TeamId, player.TeamName);
+        isEditing = true;
+        formErrorMessage = null;
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        formErrorMessage = null;
+    }
+
+    private async Task SavePlayer()
+    {
+        if (editingPlayer.TeamId <= 0)
+        {
+            formErrorMessage = "Debe seleccionar un equipo válido.";
+            return;
+        }
+
+        isSubmitting = true;
+        formErrorMessage = null;
+        try
+        {
+            if (isEditing)
+            {
+                var success = await ApiService.UpdatePlayerAsync(editingPlayer.Id, editingPlayer);
+                if (success)
+                {
+                    alertMessage = $"Jugador '{editingPlayer.FullName}' actualizado exitosamente.";
+                    alertType = AlertType.Success;
+                    CloseModal();
+                    await LoadData();
+                }
+            }
+            else
+            {
+                var created = await ApiService.CreatePlayerAsync(editingPlayer);
+                if (created != null)
+                {
+                    alertMessage = $"Jugador '{created.FullName}' registrado exitosamente.";
+                    alertType = AlertType.Success;
+                    CloseModal();
+                    await LoadData();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            formErrorMessage = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void OpenDeleteModal(PlayerDto player)
+    {
+        playerToDelete = player;
+        isDeleteModalOpen = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (playerToDelete == null) return;
+
+        try
+        {
+            var success = await ApiService.DeletePlayerAsync(playerToDelete.Id);
+            if (success)
+            {
+                alertMessage = $"Jugador '{playerToDelete.FullName}' eliminado correctamente.";
+                alertType = AlertType.Success;
+                await LoadData();
+            }
+            else
+            {
+                alertMessage = "No se pudo eliminar el jugador.";
+                alertType = AlertType.Error;
+            }
+        }
+        catch (Exception ex)
+        {
+            alertMessage = $"Error al eliminar: {ex.Message}";
+            alertType = AlertType.Error;
+        }
+        finally
+        {
+            isDeleteModalOpen = false;
+            playerToDelete = null;
+        }
+    }
+}

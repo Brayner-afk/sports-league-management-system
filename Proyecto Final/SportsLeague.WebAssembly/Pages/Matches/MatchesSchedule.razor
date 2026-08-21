@@ -1,0 +1,605 @@
+@page "/matches"
+@page "/schedule"
+@inject ISportsLeagueApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Calendario de Partidos - Sports League MS</PageTitle>
+
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="display-6 fw-bold text-white mb-1">
+            <i class="bi bi-calendar-event-fill text-warning me-2"></i>Calendario de Partidos
+        </h1>
+        <p class="text-white-50 m-0">Programa encuentros deportivos, gestiona sedes y actualiza marcadores en tiempo real.</p>
+    </div>
+    <div>
+        <button class="btn btn-yellow" @onclick="OpenCreateModal">
+            <i class="bi bi-calendar-plus-fill"></i>
+            <span>Programar Partido</span>
+        </button>
+    </div>
+</div>
+
+<ToastAlert Message="@alertMessage" Type="@alertType" OnDismiss="@(() => alertMessage = null)" />
+
+<!-- Filtros de Estado y Equipos -->
+<div class="sports-card mb-4">
+    <div class="row g-3 align-items-center">
+        <!-- Filtros por Estado (Píldoras) -->
+        <div class="col-lg-6">
+            <div class="d-flex flex-wrap gap-2">
+                <button type="button" class="btn @(selectedStatus == "Todos" ? "btn-yellow" : "btn-sports-dark") btn-sm" @onclick="@(() => SetStatusFilter("Todos"))">
+                    Todos (@matches.Count)
+                </button>
+                <button type="button" class="btn @(selectedStatus == "Programado" ? "btn-yellow" : "btn-sports-dark") btn-sm" @onclick="@(() => SetStatusFilter("Programado"))">
+                    <i class="bi bi-clock me-1"></i> Programados (@matches.Count(m => m.Status == "Programado"))
+                </button>
+                <button type="button" class="btn @(selectedStatus == "En Curso" ? "btn-yellow" : "btn-sports-dark") btn-sm" @onclick="@(() => SetStatusFilter("En Curso"))">
+                    <i class="bi bi-broadcast me-1 text-warning"></i> En Vivo (@matches.Count(m => m.Status == "En Curso"))
+                </button>
+                <button type="button" class="btn @(selectedStatus == "Finalizado" ? "btn-yellow" : "btn-sports-dark") btn-sm" @onclick="@(() => SetStatusFilter("Finalizado"))">
+                    <i class="bi bi-check2-circle me-1"></i> Finalizados (@matches.Count(m => m.Status == "Finalizado"))
+                </button>
+                <button type="button" class="btn @(selectedStatus == "Cancelado" ? "btn-yellow" : "btn-sports-dark") btn-sm" @onclick="@(() => SetStatusFilter("Cancelado"))">
+                    <i class="bi bi-x-circle me-1 text-danger"></i> Cancelados (@matches.Count(m => m.Status == "Cancelado"))
+                </button>
+            </div>
+        </div>
+
+        <!-- Filtro por Equipo -->
+        <div class="col-lg-4 col-md-8">
+            <select class="sports-input" @bind="selectedTeamFilter">
+                <option value="0">Filtrar por Cualquier Equipo</option>
+                @foreach (var team in teams)
+                {
+                    <option value="@team.Id">@team.Name</option>
+                }
+            </select>
+        </div>
+
+        <div class="col-lg-2 col-md-4 d-flex justify-content-end">
+            <button class="btn btn-sports-dark w-100" @onclick="LoadData">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refrescar
+            </button>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="text-white-50 mt-3">Cargando partidos de la temporada...</p>
+    </div>
+}
+else if (!FilteredMatches.Any())
+{
+    <div class="sports-card text-center py-5">
+        <i class="bi bi-calendar-x text-white-50 display-4 d-block mb-3"></i>
+        <h4 class="text-white">No hay partidos para el filtro seleccionado</h4>
+        <p class="text-white-50">Programa un nuevo partido entre los equipos de la liga.</p>
+        <button class="btn btn-yellow mt-2" @onclick="OpenCreateModal">
+            <i class="bi bi-calendar-plus me-1"></i> Programar Partido
+        </button>
+    </div>
+}
+else
+{
+    <div class="row g-4">
+        @foreach (var match in FilteredMatches)
+        {
+            <div class="col-lg-6">
+                <div class="sports-card interactive h-100 d-flex flex-column">
+                    <!-- Encabezado del Encuentro: Fecha, Estadio y Estado -->
+                    <div class="d-flex align-items-center justify-content-between pb-3 mb-3 border-bottom" style="border-color: var(--c-gray-border) !important;">
+                        <div class="d-flex align-items-center gap-2">
+                            <i class="bi bi-calendar3 text-warning"></i>
+                            <span class="text-white fw-bold" style="font-size: 0.9rem;">
+                                @match.MatchDate.ToString("dddd, dd MMMM yyyy - hh:mm tt")
+                            </span>
+                        </div>
+                        <div>
+                            @if (match.Status == "Finalizado")
+                            {
+                                <span class="badge badge-gray">
+                                    <i class="bi bi-check-circle-fill me-1 text-success"></i> Finalizado
+                                </span>
+                            }
+                            else if (match.Status == "En Curso")
+                            {
+                                <span class="badge badge-yellow" style="animation: pulseGlow 1.5s infinite;">
+                                    <i class="bi bi-broadcast me-1"></i> En Curso
+                                </span>
+                            }
+                            else if (match.Status == "Cancelado")
+                            {
+                                <span class="badge badge-gray text-danger border-danger">
+                                    <i class="bi bi-x-circle-fill me-1 text-danger"></i> Cancelado
+                                </span>
+                            }
+                            else
+                            {
+                                <span class="badge badge-yellow">
+                                    <i class="bi bi-clock-fill me-1"></i> Programado
+                                </span>
+                            }
+                        </div>
+                    </div>
+
+
+                    <!-- Marcador y Equipos (Scoreboard) -->
+                    <div class="py-2 mb-3">
+                        <div class="row align-items-center text-center">
+                            <!-- Equipo Local -->
+                            <div class="col-5 text-center">
+                                <div class="stat-icon-wrapper mx-auto mb-2" style="width: 46px; height: 46px; font-size: 1.3rem;">
+                                    <i class="bi bi-shield-shaded"></i>
+                                </div>
+                                <h5 class="text-white fw-bold mb-1 fs-6">@match.HomeTeamName</h5>
+                                <span class="badge badge-gray" style="font-size: 0.7rem;">Local</span>
+                            </div>
+
+                            <!-- Marcador / VS -->
+                            <div class="col-2 text-center">
+                                @if (match.Status == "Finalizado" || match.Status == "En Curso")
+                                {
+                                    <div class="d-flex align-items-center justify-content-center gap-2">
+                                        <span class="display-6 fw-bold text-warning">@(match.HomeScore ?? 0)</span>
+                                        <span class="text-white-50 fs-5">-</span>
+                                        <span class="display-6 fw-bold text-warning">@(match.AwayScore ?? 0)</span>
+                                    </div>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-yellow fs-6 px-3 py-2">VS</span>
+                                }
+                            </div>
+
+                            <!-- Equipo Visitante -->
+                            <div class="col-5 text-center">
+                                <div class="stat-icon-wrapper mx-auto mb-2" style="width: 46px; height: 46px; font-size: 1.3rem;">
+                                    <i class="bi bi-shield-fill"></i>
+                                </div>
+                                <h5 class="text-white fw-bold mb-1 fs-6">@match.AwayTeamName</h5>
+                                <span class="badge badge-gray" style="font-size: 0.7rem;">Visitante</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Ubicación / Sede -->
+                    <div class="p-2 px-3 rounded-3 mb-3 d-flex align-items-center gap-2" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                        <i class="bi bi-geo-alt-fill text-warning"></i>
+                        <span class="text-white-50 small">Sede / Estadio: <strong class="text-white">@match.Location</strong></span>
+                    </div>
+
+                    <!-- Botones de Acción -->
+                    <div class="mt-auto pt-2 d-flex align-items-center justify-content-between">
+                        <button class="btn btn-yellow btn-sm" @onclick="() => OpenScoreModal(match)">
+                            <i class="bi bi-pencil-square me-1"></i> Actualizar Marcador
+                        </button>
+                        <div class="d-flex gap-2">
+                            <button class="btn-action-icon" title="Editar Partido" @onclick="() => OpenEditModal(match)">
+                                <i class="bi bi-gear-fill"></i>
+                            </button>
+                            <button class="btn-action-icon danger" title="Eliminar Partido" @onclick="() => OpenDeleteModal(match)">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+
+<!-- Modal para Crear / Editar Partido Completo -->
+@if (isModalOpen)
+{
+    <div class="sports-modal-backdrop" @onclick="CloseModal">
+        <div class="sports-modal-content" @onclick:stopPropagation="true">
+            <div class="sports-modal-header">
+                <h5 class="m-0 text-white font-weight-bold">
+                    <i class="bi @(isEditing ? "bi-pencil-square" : "bi-calendar-plus-fill") text-warning me-2"></i>
+                    @(isEditing ? "Editar Partido" : "Programar Nuevo Partido")
+                </h5>
+                <button type="button" class="btn-action-icon" @onclick="CloseModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            
+            <EditForm Model="@editingMatch" OnValidSubmit="SaveMatch">
+                <DataAnnotationsValidator />
+                <div class="sports-modal-body">
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-6">
+                            <label class="sports-label">Equipo Local *</label>
+                            <select class="sports-input" @bind="editingMatch.HomeTeamId">
+                                <option value="0">-- Seleccionar --</option>
+                                @foreach (var team in teams)
+                                {
+                                    <option value="@team.Id">@team.Name</option>
+                                }
+                            </select>
+                            <ValidationMessage For="@(() => editingMatch.HomeTeamId)" class="text-danger small mt-1" />
+                        </div>
+                        <div class="col-md-6">
+                            <label class="sports-label">Equipo Visitante *</label>
+                            <select class="sports-input" @bind="editingMatch.AwayTeamId">
+                                <option value="0">-- Seleccionar --</option>
+                                @foreach (var team in teams)
+                                {
+                                    <option value="@team.Id">@team.Name</option>
+                                }
+                            </select>
+                            <ValidationMessage For="@(() => editingMatch.AwayTeamId)" class="text-danger small mt-1" />
+                        </div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="sports-label">Fecha y Hora *</label>
+                        <input type="datetime-local" class="sports-input" @bind="editingMatch.MatchDate" />
+                        <ValidationMessage For="@(() => editingMatch.MatchDate)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="sports-label">Sede / Estadio *</label>
+                        <InputText class="sports-input" @bind-Value="editingMatch.Location" placeholder="Ej. Estadio Quisqueya Juan Marichal" />
+                        <ValidationMessage For="@(() => editingMatch.Location)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="row g-3 mb-3">
+                        <div class="col-md-4">
+                            <label class="sports-label">Puntaje Local</label>
+                            <InputNumber class="sports-input" @bind-Value="editingMatch.HomeScore" placeholder="0" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="sports-label">Puntaje Visitante</label>
+                            <InputNumber class="sports-input" @bind-Value="editingMatch.AwayScore" placeholder="0" />
+                        </div>
+                        <div class="col-md-4">
+                            <label class="sports-label">Estado</label>
+                            <select class="sports-input" @bind="editingMatch.Status">
+                                <option value="Programado">Programado</option>
+                                <option value="En Curso">En Curso</option>
+                                <option value="Finalizado">Finalizado</option>
+                                <option value="Cancelado">Cancelado</option>
+                            </select>
+                        </div>
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(formErrorMessage))
+                    {
+                        <div class="p-3 bg-danger bg-opacity-25 border border-danger rounded-3 text-danger small">
+                            <i class="bi bi-exclamation-octagon-fill me-1"></i> @formErrorMessage
+                        </div>
+                    }
+                </div>
+
+                <div class="sports-modal-footer">
+                    <button type="button" class="btn btn-sports-dark" @onclick="CloseModal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-yellow" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg me-1"></i>
+                            <span>@(isEditing ? "Actualizar Partido" : "Guardar Partido")</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<!-- Modal Rápido para Marcador / Resultado -->
+@if (isScoreModalOpen && scoreMatch != null)
+{
+    <div class="sports-modal-backdrop" @onclick="() => isScoreModalOpen = false">
+        <div class="sports-modal-content" @onclick:stopPropagation="true">
+            <div class="sports-modal-header">
+                <h5 class="m-0 text-white font-weight-bold">
+                    <i class="bi bi-scoreboard-fill text-warning me-2"></i>
+                    Actualizar Marcador y Estado
+                </h5>
+                <button type="button" class="btn-action-icon" @onclick="() => isScoreModalOpen = false">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            
+            <div class="sports-modal-body">
+                <div class="p-3 rounded-3 mb-3 text-center" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                    <div class="row align-items-center">
+                        <div class="col-5">
+                            <strong class="text-white d-block">@scoreMatch.HomeTeamName</strong>
+                            <small class="text-warning">Local</small>
+                        </div>
+                        <div class="col-2">
+                            <span class="text-white-50 fw-bold">VS</span>
+                        </div>
+                        <div class="col-5">
+                            <strong class="text-white d-block">@scoreMatch.AwayTeamName</strong>
+                            <small class="text-warning">Visitante</small>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row g-3 mb-3">
+                    <div class="col-6">
+                        <label class="sports-label text-center">Puntaje @scoreMatch.HomeTeamName</label>
+                        <input type="number" min="0" class="sports-input text-center fs-4 fw-bold text-warning" @bind="scoreMatch.HomeScore" />
+                    </div>
+                    <div class="col-6">
+                        <label class="sports-label text-center">Puntaje @scoreMatch.AwayTeamName</label>
+                        <input type="number" min="0" class="sports-input text-center fs-4 fw-bold text-warning" @bind="scoreMatch.AwayScore" />
+                    </div>
+                </div>
+
+                <div class="mb-3">
+                    <label class="sports-label">Estado del Partido</label>
+                    <select class="sports-input" @bind="scoreMatch.Status">
+                        <option value="Programado">Programado</option>
+                        <option value="En Curso">En Curso (En Vivo)</option>
+                        <option value="Finalizado">Finalizado</option>
+                        <option value="Cancelado">Cancelado</option>
+                    </select>
+                </div>
+            </div>
+
+            <div class="sports-modal-footer">
+                <button type="button" class="btn btn-sports-dark" @onclick="() => isScoreModalOpen = false">
+                    Cancelar
+                </button>
+                <button type="button" class="btn btn-yellow" @onclick="SaveScore" disabled="@isSubmitting">
+                    <i class="bi bi-check-lg me-1"></i> Guardar Marcador
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+<!-- Modal de Confirmación de Eliminación -->
+<ConfirmModal 
+    IsOpen="@isDeleteModalOpen"
+    Title="Eliminar Partido"
+    Message="¿Está seguro de que desea eliminar este partido del calendario oficial de la liga?"
+    ItemName="@($"{matchToDelete?.HomeTeamName} vs {matchToDelete?.AwayTeamName}")"
+    ConfirmButtonText="Eliminar Partido"
+    OnConfirm="ConfirmDelete"
+    OnCancel="() => isDeleteModalOpen = false" />
+
+@code {
+    private List<MatchDto> matches = new();
+    private List<TeamDto> teams = new();
+    private bool isLoading = true;
+
+    private string selectedStatus = "Todos";
+    private int selectedTeamFilter = 0;
+
+    // Modales
+    private bool isModalOpen = false;
+    private bool isEditing = false;
+    private bool isSubmitting = false;
+    private MatchDto editingMatch = new();
+    private string? formErrorMessage;
+
+    // Modal de Marcador Rápido
+    private bool isScoreModalOpen = false;
+    private MatchDto? scoreMatch;
+
+    // Eliminación
+    private bool isDeleteModalOpen = false;
+    private MatchDto? matchToDelete;
+
+    // Notificaciones
+    private string? alertMessage;
+    private AlertType alertType = AlertType.Info;
+
+    private IEnumerable<MatchDto> FilteredMatches =>
+        matches.Where(m =>
+            (selectedStatus == "Todos" || m.Status.Equals(selectedStatus, StringComparison.OrdinalIgnoreCase)) &&
+            (selectedTeamFilter == 0 || m.HomeTeamId == selectedTeamFilter || m.AwayTeamId == selectedTeamFilter));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
+        isLoading = true;
+        try
+        {
+            var teamsTask = ApiService.GetTeamsAsync();
+            var matchesTask = ApiService.GetMatchesAsync();
+
+            await Task.WhenAll(teamsTask, matchesTask);
+
+            teams = (await teamsTask).ToList();
+            matches = (await matchesTask).ToList();
+        }
+        catch (Exception ex)
+        {
+            alertMessage = $"Error al cargar partidos: {ex.Message}";
+            alertType = AlertType.Error;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void SetStatusFilter(string status)
+    {
+        selectedStatus = status;
+    }
+
+    private void OpenCreateModal()
+    {
+        var firstTeam = teams.FirstOrDefault()?.Id ?? 0;
+        var secondTeam = teams.Skip(1).FirstOrDefault()?.Id ?? 0;
+
+        editingMatch = new MatchDto
+        {
+            HomeTeamId = firstTeam,
+            AwayTeamId = secondTeam,
+            MatchDate = DateTime.Today.AddDays(1).AddHours(19),
+            Location = "Estadio Principal",
+            Status = "Programado"
+        };
+        isEditing = false;
+        formErrorMessage = null;
+        isModalOpen = true;
+    }
+
+    private void OpenEditModal(MatchDto match)
+    {
+        editingMatch = new MatchDto(
+            match.Id,
+            match.HomeTeamId,
+            match.HomeTeamName,
+            match.AwayTeamId,
+            match.AwayTeamName,
+            match.MatchDate,
+            match.Location,
+            match.HomeScore,
+            match.AwayScore,
+            match.Status
+        );
+        isEditing = true;
+        formErrorMessage = null;
+        isModalOpen = true;
+    }
+
+    private void OpenScoreModal(MatchDto match)
+    {
+        scoreMatch = new MatchDto(
+            match.Id,
+            match.HomeTeamId,
+            match.HomeTeamName,
+            match.AwayTeamId,
+            match.AwayTeamName,
+            match.MatchDate,
+            match.Location,
+            match.HomeScore ?? 0,
+            match.AwayScore ?? 0,
+            match.Status
+        );
+        isScoreModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        formErrorMessage = null;
+    }
+
+    private async Task SaveMatch()
+    {
+        if (editingMatch.HomeTeamId == editingMatch.AwayTeamId)
+        {
+            formErrorMessage = "El equipo local y el equipo visitante no pueden ser el mismo.";
+            return;
+        }
+
+        isSubmitting = true;
+        formErrorMessage = null;
+        try
+        {
+            if (isEditing)
+            {
+                var success = await ApiService.UpdateMatchAsync(editingMatch.Id, editingMatch);
+                if (success)
+                {
+                    alertMessage = "Partido actualizado exitosamente.";
+                    alertType = AlertType.Success;
+                    CloseModal();
+                    await LoadData();
+                }
+            }
+            else
+            {
+                var created = await ApiService.CreateMatchAsync(editingMatch);
+                if (created != null)
+                {
+                    alertMessage = "Partido programado exitosamente en el calendario.";
+                    alertType = AlertType.Success;
+                    CloseModal();
+                    await LoadData();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            formErrorMessage = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private async Task SaveScore()
+    {
+        if (scoreMatch == null) return;
+
+        isSubmitting = true;
+        try
+        {
+            var success = await ApiService.UpdateMatchAsync(scoreMatch.Id, scoreMatch);
+            if (success)
+            {
+                alertMessage = "Marcador y estado actualizados correctamente.";
+                alertType = AlertType.Success;
+                isScoreModalOpen = false;
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            alertMessage = $"Error al actualizar marcador: {ex.Message}";
+            alertType = AlertType.Error;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void OpenDeleteModal(MatchDto match)
+    {
+        matchToDelete = match;
+        isDeleteModalOpen = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (matchToDelete == null) return;
+
+        try
+        {
+            var success = await ApiService.DeleteMatchAsync(matchToDelete.Id);
+            if (success)
+            {
+                alertMessage = "Partido eliminado del calendario correctamente.";
+                alertType = AlertType.Success;
+                await LoadData();
+            }
+        }
+        catch (Exception ex)
+        {
+            alertMessage = $"Error al eliminar partido: {ex.Message}";
+            alertType = AlertType.Error;
+        }
+        finally
+        {
+            isDeleteModalOpen = false;
+            matchToDelete = null;
+        }
+    }
+}

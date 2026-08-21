@@ -1,0 +1,60 @@
+@inject ISportsLeagueApiService ApiService
+
+<div class="sidebar-header">
+    <img src="images/logo-Sports-League-MS.png" alt="Sports League MS Logo" class="sidebar-logo" />
+    <div>
+        <h1 class="sidebar-title">SPORTS LEAGUE</h1>
+        <p class="sidebar-subtitle">Management System</p>
+    </div>
+</div>
+
+<div class="nav-section-label">Navegación Principal</div>
+
+<nav class="d-flex flex-column flex-grow-1">
+    <NavLink class="nav-item-link" href="" Match="NavLinkMatch.All">
+        <i class="bi bi-grid-1x2-fill"></i>
+        <span>Dashboard</span>
+    </NavLink>
+
+    <NavLink class="nav-item-link" href="teams">
+        <i class="bi bi-shield-fill-check"></i>
+        <span>Equipos</span>
+    </NavLink>
+
+    <NavLink class="nav-item-link" href="players">
+        <i class="bi bi-people-fill"></i>
+        <span>Jugadores</span>
+    </NavLink>
+
+    <NavLink class="nav-item-link" href="matches">
+        <i class="bi bi-calendar-event-fill"></i>
+        <span>Partidos</span>
+    </NavLink>
+
+
+    <div class="nav-section-label mt-2">Arquitectura & Docs</div>
+
+    <NavLink class="nav-item-link" href="oop-architecture">
+        <i class="bi bi-diagram-3-fill"></i>
+        <span>Ajustes POO</span>
+    </NavLink>
+
+    <a class="nav-item-link" href="http://localhost:5070/swagger" target="_blank" title="Abrir Swagger API">
+        <i class="bi bi-code-slash"></i>
+        <span>Swagger API</span>
+        <i class="bi bi-box-arrow-up-right ms-auto text-muted" style="font-size: 0.8rem;"></i>
+    </a>
+</nav>
+
+<div class="p-3 mt-auto border-top" style="border-color: var(--c-gray-border) !important; background-color: var(--c-black-surface);">
+    <div class="d-flex align-items-center justify-content-between">
+        <div class="d-flex align-items-center gap-2">
+            <span class="spinner-grow spinner-grow-sm text-warning" role="status"></span>
+            <small class="text-white-50" style="font-size: 0.75rem;">API: Online</small>
+        </div>
+        <span class="badge badge-yellow" style="font-size: 0.65rem;">.NET 9 + WASM</span>
+    </div>
+</div>
+
+@code {
+}

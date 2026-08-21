@@ -1,0 +1,60 @@
+﻿@if (IsOpen)
+{
+    <div class="sports-modal-backdrop" @onclick="HandleBackdropClick">
+        <div class="sports-modal-content" @onclick:stopPropagation="true">
+            <div class="sports-modal-header">
+                <h5 class="m-0 text-white font-weight-bold">
+                    <i class="bi bi-exclamation-triangle-fill text-warning me-2"></i>
+                    @Title
+                </h5>
+                <button type="button" class="btn-action-icon" @onclick="Close">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            <div class="sports-modal-body">
+                <p class="text-white-50 m-0 fs-6">@Message</p>
+                @if (!string.IsNullOrEmpty(ItemName))
+                {
+                    <div class="p-3 my-3 rounded-3" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                        <span class="badge badge-yellow me-2">Objetivo</span>
+                        <strong class="text-white">@ItemName</strong>
+                    </div>
+                }
+            </div>
+            <div class="sports-modal-footer">
+                <button type="button" class="btn-sports-dark" @onclick="Close">
+                    <i class="bi bi-x-circle me-1"></i> Cancelar
+                </button>
+                <button type="button" class="btn-sports-danger" @onclick="Confirm">
+                    <i class="bi bi-trash3-fill me-1"></i> @ConfirmButtonText
+                </button>
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    [Parameter] public bool IsOpen { get; set; }
+    [Parameter] public string Title { get; set; } = "Confirmar Acción";
+    [Parameter] public string Message { get; set; } = "¿Está seguro de realizar esta acción?";
+    [Parameter] public string? ItemName { get; set; }
+    [Parameter] public string ConfirmButtonText { get; set; } = "Eliminar";
+
+    [Parameter] public EventCallback OnConfirm { get; set; }
+    [Parameter] public EventCallback OnCancel { get; set; }
+
+    private async Task Confirm()
+    {
+        await OnConfirm.InvokeAsync();
+    }
+
+    private async Task Close()
+    {
+        await OnCancel.InvokeAsync();
+    }
+
+    private async Task HandleBackdropClick()
+    {
+        await Close();
+    }
+}

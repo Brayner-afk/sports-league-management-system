@@ -1,0 +1,159 @@
+﻿@page "/oop-architecture"
+
+<PageTitle>Arquitectura POO - Sports League MS</PageTitle>
+
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="display-6 fw-bold text-white mb-1">
+            <i class="bi bi-diagram-3-fill text-warning me-2"></i>Reporte de Ajustes de POO
+        </h1>
+        <p class="text-white-50 m-0">Evidencia técnica de Clases Abstractas, Polimorfismo y Sobrecargas en el Sistema.</p>
+    </div>
+</div>
+
+<div class="row g-4 mb-4">
+    <!-- Card 1: Clases Abstractas -->
+    <div class="col-lg-6">
+        <div class="sports-card h-100">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span class="badge badge-yellow">POO: Abstracción</span>
+                <h3 class="sports-card-title">1. Clases Abstractas Implementadas</h3>
+            </div>
+            <p class="text-white-50 small mb-3">
+                Se declararon explícitamente con la palabra clave <code class="text-warning">abstract</code> las clases base del dominio y de la infraestructura para impedir instanciaciones directas y garantizar contratos polimórficos:
+            </p>
+
+            <div class="p-3 rounded-3 mb-3" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <strong class="text-white">BaseEntity</strong>
+                    <span class="badge badge-gray">SportsLeague.Domain.Core</span>
+                </div>
+                <p class="text-white-50 small mb-2">
+                    Clase base abstracta que define la propiedad de identidad <code>Id</code>, fecha de creación y el método abstracto obligatorio:
+                </p>
+                <pre class="m-0 p-2 rounded bg-black text-warning small font-monospace">public abstract class BaseEntity {
+    public int Id { get; set; }
+    public abstract string GetEntitySummary();
+}</pre>
+            </div>
+
+            <div class="p-3 rounded-3" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                <div class="d-flex align-items-center justify-content-between mb-2">
+                    <strong class="text-white">BaseRepository&lt;T&gt;</strong>
+                    <span class="badge badge-gray">SportsLeague.Infrastructure.Core</span>
+                </div>
+                <p class="text-white-50 small mb-2">
+                    Clase base abstracta genérica que encapsula las operaciones de acceso a datos con Entity Framework Core:
+                </p>
+                <pre class="m-0 p-2 rounded bg-black text-warning small font-monospace">public abstract class BaseRepository&lt;T&gt; : IBaseRepository&lt;T&gt; 
+    where T : BaseEntity {
+    protected readonly ApplicationDbContext _context;
+    // Implementación abstracta compartida
+}</pre>
+            </div>
+        </div>
+    </div>
+
+    <!-- Card 2: Sobrecargas de Constructores -->
+    <div class="col-lg-6">
+        <div class="sports-card h-100">
+            <div class="d-flex align-items-center gap-2 mb-3">
+                <span class="badge badge-yellow">POO: Constructor Overloading</span>
+                <h3 class="sports-card-title">2. Sobrecarga de Constructores</h3>
+            </div>
+            <p class="text-white-50 small mb-3">
+                Se definieron múltiples constructores con diferentes firmas para inicializar objetos según el contexto requerido:
+            </p>
+
+            <div class="table-responsive">
+                <table class="sports-table">
+                    <thead>
+                        <tr>
+                            <th>Clase / DTO</th>
+                            <th>Firmas de Constructores Sobrecargados</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        <tr>
+                            <td><strong class="text-white">Team</strong></td>
+                            <td>
+                                <div class="small text-white-50"><code>Team()</code> (EF Core)</div>
+                                <div class="small text-warning"><code>Team(string name, string city)</code></div>
+                                <div class="small text-white-50"><code>Team(int id, string name, string city)</code></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong class="text-white">Player</strong></td>
+                            <td>
+                                <div class="small text-white-50"><code>Player()</code> (EF Core)</div>
+                                <div class="small text-warning"><code>Player(string fullName, string position, int teamId)</code></div>
+                                <div class="small text-white-50"><code>Player(int id, string fullName, string position, int teamId)</code></div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong class="text-white">TeamDto / PlayerDto</strong></td>
+                            <td>
+                                <div class="small text-white-50">Constructores sin argumentos + constructores con argumentos completos.</div>
+                            </td>
+                        </tr>
+                        <tr>
+                            <td><strong class="text-white">TeamService / PlayerService</strong></td>
+                            <td>
+                                <div class="small text-warning">Inyección simple vs Inyección con repositorios combinados / validación estricta.</div>
+                            </td>
+                        </tr>
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Card 3: Sobrecargas de Métodos -->
+<div class="sports-card">
+    <div class="d-flex align-items-center gap-2 mb-3">
+        <span class="badge badge-yellow">POO: Method Overloading</span>
+        <h3 class="sports-card-title">3. Sobrecarga de Métodos (Polimorfismo Ad-Hoc)</h3>
+    </div>
+    <p class="text-white-50 small mb-3">
+        Múltiples métodos con el mismo nombre y diferentes parámetros permiten una API flexible y desacoplada:
+    </p>
+
+    <div class="row g-3">
+        <div class="col-md-4">
+            <div class="p-3 rounded-3 h-100" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                <h6 class="text-warning fw-bold mb-2">Repositorios Genéricos</h6>
+                <ul class="text-white-50 small ps-3 m-0">
+                    <li class="mb-2"><code>GetAllAsync()</code></li>
+                    <li class="mb-2"><code>GetAllAsync(Expression&lt;Func&lt;T, bool&gt;&gt; predicate)</code></li>
+                    <li class="mb-2"><code>GetByIdAsync(int id)</code></li>
+                    <li><code>GetByIdAsync(int id, bool asNoTracking)</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="p-3 rounded-3 h-100" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                <h6 class="text-warning fw-bold mb-2">Servicios de Aplicación</h6>
+                <ul class="text-white-50 small ps-3 m-0">
+                    <li class="mb-2"><code>GetAllTeamsAsync()</code></li>
+                    <li class="mb-2"><code>GetAllTeamsAsync(string? cityFilter)</code></li>
+                    <li class="mb-2"><code>CreateTeamAsync(TeamDto dto)</code></li>
+                    <li><code>CreateTeamAsync(string name, string city)</code></li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="col-md-4">
+            <div class="p-3 rounded-3 h-100" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                <h6 class="text-warning fw-bold mb-2">Entidades de Dominio</h6>
+                <ul class="text-white-50 small ps-3 m-0">
+                    <li class="mb-2"><code>Team.AddPlayer(Player player)</code></li>
+                    <li class="mb-2"><code>Team.AddPlayer(string name, string pos)</code></li>
+                    <li class="mb-2"><code>Player.UpdateInfo(string name, string pos)</code></li>
+                    <li><code>Player.UpdateInfo(string name, string pos, int newTeamId)</code></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>

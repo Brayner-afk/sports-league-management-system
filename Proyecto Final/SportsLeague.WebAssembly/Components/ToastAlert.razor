@@ -1,0 +1,38 @@
+﻿@if (!string.IsNullOrEmpty(Message))
+{
+    <div class="alert @AlertClass alert-dismissible fade show d-flex align-items-center justify-content-between p-3 mb-4 rounded-3 shadow-sm" role="alert" style="border: 1px solid rgba(255, 184, 0, 0.3);">
+        <div class="d-flex align-items-center gap-2">
+            <i class="bi @Icon fs-5"></i>
+            <div>@Message</div>
+        </div>
+        <button type="button" class="btn-close btn-close-white" @onclick="Dismiss" aria-label="Cerrar"></button>
+    </div>
+}
+
+@code {
+    [Parameter] public string? Message { get; set; }
+    [Parameter] public AlertType Type { get; set; } = AlertType.Info;
+    [Parameter] public EventCallback OnDismiss { get; set; }
+
+    private string AlertClass => Type switch
+    {
+        AlertType.Success => "bg-dark text-white border-warning",
+        AlertType.Error => "bg-danger text-white border-danger",
+        AlertType.Warning => "bg-warning text-dark border-warning",
+        _ => "bg-dark text-white border-secondary"
+    };
+
+    private string Icon => Type switch
+    {
+        AlertType.Success => "bi-check-circle-fill text-warning",
+        AlertType.Error => "bi-exclamation-octagon-fill text-white",
+        AlertType.Warning => "bi-exclamation-triangle-fill text-dark",
+        _ => "bi-info-circle-fill text-info"
+    };
+
+    private async Task Dismiss()
+    {
+        Message = null;
+        await OnDismiss.InvokeAsync();
+    }
+}

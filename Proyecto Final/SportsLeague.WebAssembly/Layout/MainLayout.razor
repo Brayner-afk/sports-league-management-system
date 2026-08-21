@@ -1,0 +1,48 @@
+﻿@inherits LayoutComponentBase
+@inject NavigationManager Navigation
+
+<div class="app-wrapper">
+    <!-- Sidebar Lateral -->
+    <aside class="sidebar">
+        <NavMenu />
+    </aside>
+
+    <!-- Contenido Principal -->
+    <div class="main-content">
+        <!-- Top Navbar -->
+        <header class="top-navbar">
+            <div class="d-flex align-items-center gap-3">
+                <span class="badge badge-yellow">
+                    <i class="bi bi-award-fill me-1"></i> Liga Oficial
+                </span>
+                <span class="text-white-50" style="font-size: 0.85rem;">
+                    Temporada Regular 2026 | Arquitectura Distribuida
+                </span>
+            </div>
+
+            <div class="d-flex align-items-center gap-3">
+                <a href="teams" class="btn btn-yellow btn-sm">
+                    <i class="bi bi-plus-lg"></i>
+                    <span>Gestionar Liga</span>
+                </a>
+                <a href="oop-architecture" class="btn btn-sports-dark btn-sm">
+                    <i class="bi bi-cpu-fill text-warning"></i>
+                    <span>Ver POO</span>
+                </a>
+            </div>
+        </header>
+
+        <!-- Contenedor de la Página -->
+        <main class="page-container">
+            @Body
+        </main>
+
+        <!-- Footer -->
+        <footer class="p-3 border-top text-center text-white-50" style="border-color: var(--c-gray-border) !important; background-color: var(--c-black-surface); font-size: 0.82rem;">
+            <div class="container-fluid d-flex flex-column flex-md-row align-items-center justify-content-between">
+                <span>&copy; 2026 <strong>Sports League Management System</strong> - Clean Architecture & POO</span>
+                <span class="text-warning">Paleta: Amarillo, Negro, Blanco y Gris</span>
+            </div>
+        </footer>
+    </div>
+</div>

@@ -1,0 +1,378 @@
+﻿@page "/teams"
+@inject ISportsLeagueApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Equipos - Sports League MS</PageTitle>
+
+<div class="d-flex flex-column flex-md-row align-items-md-center justify-content-between gap-3 mb-4">
+    <div>
+        <h1 class="display-6 fw-bold text-white mb-1">
+            <i class="bi bi-shield-fill-check text-warning me-2"></i>Gestión de Equipos
+        </h1>
+        <p class="text-white-50 m-0">Administra las franquicias deportivas y sus sedes oficiales.</p>
+    </div>
+    <div>
+        <button class="btn btn-yellow" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-circle-fill"></i>
+            <span>Nuevo Equipo</span>
+        </button>
+    </div>
+</div>
+
+<ToastAlert Message="@alertMessage" Type="@alertType" OnDismiss="@(() => alertMessage = null)" />
+
+<!-- Filtros y Búsqueda -->
+<div class="sports-card mb-4">
+    <div class="row g-3 align-items-center">
+        <div class="col-md-7">
+            <div class="position-relative">
+                <i class="bi bi-search position-absolute top-50 start-0 translate-middle-y ms-3 text-muted"></i>
+                <input type="text" class="sports-input ps-5" placeholder="Buscar equipo por nombre o ciudad..." @bind="searchTerm" @bind:event="oninput" />
+            </div>
+        </div>
+        <div class="col-md-5 d-flex gap-2 justify-content-md-end">
+            <button class="btn btn-sports-dark" @onclick="LoadTeams">
+                <i class="bi bi-arrow-clockwise me-1"></i> Refrescar
+            </button>
+            <div class="btn-group" role="group">
+                <button type="button" class="btn @(viewMode == "grid" ? "btn-yellow" : "btn-sports-dark") btn-sm" @onclick="@(() => viewMode = "grid")" title="Vista en Cuadrícula">
+                    <i class="bi bi-grid-fill"></i>
+                </button>
+                <button type="button" class="btn @(viewMode == "table" ? "btn-yellow" : "btn-sports-dark") btn-sm" @onclick="@(() => viewMode = "table")" title="Vista en Tabla">
+                    <i class="bi bi-list-ul"></i>
+                </button>
+            </div>
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-warning" role="status"></div>
+        <p class="text-white-50 mt-3">Cargando equipos...</p>
+    </div>
+}
+else if (!FilteredTeams.Any())
+{
+    <div class="sports-card text-center py-5">
+        <i class="bi bi-shield-x text-white-50 display-4 d-block mb-3"></i>
+        <h4 class="text-white">No se encontraron equipos</h4>
+        <p class="text-white-50">Intenta cambiar los términos de búsqueda o registra un nuevo equipo.</p>
+        <button class="btn btn-yellow mt-2" @onclick="OpenCreateModal">
+            <i class="bi bi-plus-lg me-1"></i> Crear Primer Equipo
+        </button>
+    </div>
+}
+else if (viewMode == "grid")
+{
+    <div class="row g-4">
+        @foreach (var team in FilteredTeams)
+        {
+            <div class="col-md-6 col-lg-4">
+                <div class="sports-card interactive h-100 d-flex flex-column">
+                    <div class="d-flex align-items-start justify-content-between mb-3">
+                        <div class="stat-icon-wrapper" style="width: 48px; height: 48px; font-size: 1.3rem;">
+                            <i class="bi bi-shield-shaded"></i>
+                        </div>
+                        <span class="badge badge-yellow">
+                            <i class="bi bi-people-fill me-1"></i>@team.PlayerCount Jugadores
+                        </span>
+                    </div>
+
+                    <h3 class="text-white fw-bold mb-1 fs-5">@team.Name</h3>
+                    <p class="text-white-50 mb-3 d-flex align-items-center gap-1" style="font-size: 0.9rem;">
+                        <i class="bi bi-geo-alt-fill text-warning"></i>
+                        <span>@team.City</span>
+                    </p>
+
+                    <div class="mt-auto pt-3 border-top d-flex align-items-center justify-content-between" style="border-color: var(--c-gray-border) !important;">
+                        <a href="teams/@team.Id" class="btn btn-sports-dark btn-sm">
+                            <i class="bi bi-eye-fill me-1"></i> Ver Roster
+                        </a>
+                        <div class="d-flex gap-2">
+                            <button class="btn-action-icon" title="Editar Equipo" @onclick="() => OpenEditModal(team)">
+                                <i class="bi bi-pencil-fill"></i>
+                            </button>
+                            <button class="btn-action-icon danger" title="Eliminar Equipo" @onclick="() => OpenDeleteModal(team)">
+                                <i class="bi bi-trash3-fill"></i>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        }
+    </div>
+}
+else
+{
+    <div class="sports-table-container">
+        <table class="sports-table">
+            <thead>
+                <tr>
+                    <th>ID</th>
+                    <th>Nombre del Equipo</th>
+                    <th>Ciudad</th>
+                    <th class="text-center">Jugadores</th>
+                    <th class="text-end">Acciones</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach (var team in FilteredTeams)
+                {
+                    <tr>
+                        <td class="text-white-50">#@team.Id</td>
+                        <td>
+                            <div class="d-flex align-items-center gap-2">
+                                <i class="bi bi-shield text-warning"></i>
+                                <strong class="text-white">@team.Name</strong>
+                            </div>
+                        </td>
+                        <td>
+                            <span class="badge badge-gray">
+                                <i class="bi bi-geo-alt me-1"></i>@team.City
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <span class="badge badge-yellow">@team.PlayerCount</span>
+                        </td>
+                        <td class="text-end">
+                            <div class="d-inline-flex gap-2">
+                                <a href="teams/@team.Id" class="btn btn-sports-dark btn-sm py-1 px-2" title="Ver Detalles">
+                                    <i class="bi bi-eye"></i>
+                                </a>
+                                <button class="btn-action-icon" style="width: 32px; height: 32px;" title="Editar" @onclick="() => OpenEditModal(team)">
+                                    <i class="bi bi-pencil" style="font-size: 0.85rem;"></i>
+                                </button>
+                                <button class="btn-action-icon danger" style="width: 32px; height: 32px;" title="Eliminar" @onclick="() => OpenDeleteModal(team)">
+                                    <i class="bi bi-trash3" style="font-size: 0.85rem;"></i>
+                                </button>
+                            </div>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+}
+
+<!-- Modal para Crear / Editar Equipo -->
+@if (isModalOpen)
+{
+    <div class="sports-modal-backdrop" @onclick="CloseModal">
+        <div class="sports-modal-content" @onclick:stopPropagation="true">
+            <div class="sports-modal-header">
+                <h5 class="m-0 text-white font-weight-bold">
+                    <i class="bi @(isEditing ? "bi-pencil-square" : "bi-plus-circle") text-warning me-2"></i>
+                    @(isEditing ? "Editar Equipo" : "Nuevo Equipo")
+                </h5>
+                <button type="button" class="btn-action-icon" @onclick="CloseModal">
+                    <i class="bi bi-x-lg"></i>
+                </button>
+            </div>
+            
+            <EditForm Model="@editingTeam" OnValidSubmit="SaveTeam">
+                <DataAnnotationsValidator />
+                <div class="sports-modal-body">
+                    <div class="mb-3">
+                        <label class="sports-label">Nombre del Equipo *</label>
+                        <InputText class="sports-input" @bind-Value="editingTeam.Name" placeholder="Ej. Tigres del Licey" />
+                        <ValidationMessage For="@(() => editingTeam.Name)" class="text-danger small mt-1" />
+                    </div>
+
+                    <div class="mb-3">
+                        <label class="sports-label">Ciudad / Sede *</label>
+                        <InputText class="sports-input" @bind-Value="editingTeam.City" placeholder="Ej. Santo Domingo" />
+                        <ValidationMessage For="@(() => editingTeam.City)" class="text-danger small mt-1" />
+                    </div>
+
+                    @if (!string.IsNullOrEmpty(formErrorMessage))
+                    {
+                        <div class="p-3 bg-danger bg-opacity-25 border border-danger rounded-3 text-danger small">
+                            <i class="bi bi-exclamation-octagon-fill me-1"></i> @formErrorMessage
+                        </div>
+                    }
+                </div>
+
+                <div class="sports-modal-footer">
+                    <button type="button" class="btn btn-sports-dark" @onclick="CloseModal">
+                        Cancelar
+                    </button>
+                    <button type="submit" class="btn btn-yellow" disabled="@isSubmitting">
+                        @if (isSubmitting)
+                        {
+                            <span class="spinner-border spinner-border-sm me-1"></span>
+                            <span>Guardando...</span>
+                        }
+                        else
+                        {
+                            <i class="bi bi-check-lg me-1"></i>
+                            <span>@(isEditing ? "Actualizar" : "Guardar Equipo")</span>
+                        }
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
+}
+
+<!-- Modal de Confirmación de Eliminación -->
+<ConfirmModal 
+    IsOpen="@isDeleteModalOpen"
+    Title="Eliminar Equipo"
+    Message="¿Está seguro de que desea eliminar este equipo? Se eliminarán también los jugadores asociados debido a la relación en cascada."
+    ItemName="@teamToDelete?.Name"
+    ConfirmButtonText="Eliminar Definitivamente"
+    OnConfirm="ConfirmDelete"
+    OnCancel="() => isDeleteModalOpen = false" />
+
+@code {
+    private List<TeamDto> teams = new();
+    private bool isLoading = true;
+    private string searchTerm = "";
+    private string viewMode = "grid";
+
+    // Modales y formularios
+    private bool isModalOpen = false;
+    private bool isEditing = false;
+    private bool isSubmitting = false;
+    private TeamDto editingTeam = new();
+    private string? formErrorMessage;
+
+    // Eliminación
+    private bool isDeleteModalOpen = false;
+    private TeamDto? teamToDelete;
+
+    // Notificaciones
+    private string? alertMessage;
+    private AlertType alertType = AlertType.Info;
+
+    private IEnumerable<TeamDto> FilteredTeams =>
+        string.IsNullOrWhiteSpace(searchTerm)
+            ? teams
+            : teams.Where(t => 
+                t.Name.Contains(searchTerm, StringComparison.OrdinalIgnoreCase) || 
+                t.City.Contains(searchTerm, StringComparison.OrdinalIgnoreCase));
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadTeams();
+    }
+
+    private async Task LoadTeams()
+    {
+        isLoading = true;
+        try
+        {
+            var result = await ApiService.GetTeamsAsync();
+            teams = result.ToList();
+        }
+        catch (Exception ex)
+        {
+            alertMessage = $"Error cargando equipos: {ex.Message}";
+            alertType = AlertType.Error;
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private void OpenCreateModal()
+    {
+        editingTeam = new TeamDto();
+        isEditing = false;
+        formErrorMessage = null;
+        isModalOpen = true;
+    }
+
+    private void OpenEditModal(TeamDto team)
+    {
+        editingTeam = new TeamDto(team.Id, team.Name, team.City, team.PlayerCount);
+        isEditing = true;
+        formErrorMessage = null;
+        isModalOpen = true;
+    }
+
+    private void CloseModal()
+    {
+        isModalOpen = false;
+        formErrorMessage = null;
+    }
+
+    private async Task SaveTeam()
+    {
+        isSubmitting = true;
+        formErrorMessage = null;
+        try
+        {
+            if (isEditing)
+            {
+                var success = await ApiService.UpdateTeamAsync(editingTeam.Id, editingTeam);
+                if (success)
+                {
+                    alertMessage = $"Equipo '{editingTeam.Name}' actualizado exitosamente.";
+                    alertType = AlertType.Success;
+                    CloseModal();
+                    await LoadTeams();
+                }
+            }
+            else
+            {
+                var created = await ApiService.CreateTeamAsync(editingTeam);
+                if (created != null)
+                {
+                    alertMessage = $"Equipo '{created.Name}' registrado exitosamente.";
+                    alertType = AlertType.Success;
+                    CloseModal();
+                    await LoadTeams();
+                }
+            }
+        }
+        catch (Exception ex)
+        {
+            formErrorMessage = ex.Message;
+        }
+        finally
+        {
+            isSubmitting = false;
+        }
+    }
+
+    private void OpenDeleteModal(TeamDto team)
+    {
+        teamToDelete = team;
+        isDeleteModalOpen = true;
+    }
+
+    private async Task ConfirmDelete()
+    {
+        if (teamToDelete == null) return;
+
+        try
+        {
+            var success = await ApiService.DeleteTeamAsync(teamToDelete.Id);
+            if (success)
+            {
+                alertMessage = $"Equipo '{teamToDelete.Name}' eliminado correctamente.";
+                alertType = AlertType.Success;
+                await LoadTeams();
+            }
+            else
+            {
+                alertMessage = "No se pudo eliminar el equipo.";
+                alertType = AlertType.Error;
+            }
+        }
+        catch (Exception ex)
+        {
+            alertMessage = $"Error al eliminar: {ex.Message}";
+            alertType = AlertType.Error;
+        }
+        finally
+        {
+            isDeleteModalOpen = false;
+            teamToDelete = null;
+        }
+    }
+}

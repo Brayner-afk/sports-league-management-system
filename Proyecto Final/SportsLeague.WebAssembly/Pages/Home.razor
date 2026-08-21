@@ -1,0 +1,295 @@
+@page "/"
+@inject ISportsLeagueApiService ApiService
+@inject NavigationManager Navigation
+
+<PageTitle>Dashboard - Sports League Management System</PageTitle>
+
+<!-- Banner Principal Hero -->
+<div class="hero-banner">
+    <div class="row align-items-center">
+        <div class="col-lg-8">
+            <div class="d-inline-flex align-items-center gap-2 px-3 py-1 rounded-pill mb-3" style="background-color: rgba(255, 184, 0, 0.15); border: 1px solid rgba(255, 184, 0, 0.4);">
+                <i class="bi bi-stars text-warning"></i>
+                <span class="text-warning fw-semibold" style="font-size: 0.82rem;">Arquitectura Distribuida + Blazor WebAssembly + ASP.NET Core API</span>
+            </div>
+            <h1 class="display-5 fw-bold mb-2 text-white">
+                Sistema de Gestión de <span class="text-warning">Ligas Deportivas</span>
+            </h1>
+            <p class="lead text-white-50 mb-4" style="max-width: 650px; font-size: 1.05rem;">
+                Plataforma integral para la administración centralizada de franquicias, alineaciones de jugadores, estadísticas y torneos bajo principios estrictos de Programación Orientada a Objetos y Clean Architecture.
+            </p>
+            <div class="d-flex flex-wrap gap-3">
+                <a href="teams" class="btn btn-yellow">
+                    <i class="bi bi-shield-fill-check"></i>
+                    <span>Ver Equipos</span>
+                </a>
+                <a href="players" class="btn btn-sports-dark">
+                    <i class="bi bi-people-fill"></i>
+                    <span>Ver Jugadores</span>
+                </a>
+                <a href="matches" class="btn btn-yellow">
+                    <i class="bi bi-calendar-event-fill"></i>
+                    <span>Calendario de Juegos</span>
+                </a>
+                <a href="oop-architecture" class="btn btn-outline-yellow">
+                    <i class="bi bi-diagram-3-fill"></i>
+                    <span>Ajustes POO</span>
+                </a>
+            </div>
+        </div>
+        <div class="col-lg-4 text-center d-none d-lg-block">
+            <img src="images/logo-Sports-League-MS.png" alt="Logo de la Liga" class="img-fluid" style="max-height: 180px; filter: drop-shadow(0 10px 25px rgba(255, 184, 0, 0.4));" />
+        </div>
+    </div>
+</div>
+
+@if (isLoading)
+{
+    <div class="text-center py-5">
+        <div class="spinner-border text-warning" role="status" style="width: 3rem; height: 3rem;"></div>
+        <p class="text-white-50 mt-3">Consultando datos del Backend en tiempo real...</p>
+    </div>
+}
+else
+{
+    <!-- Tarjetas de Estadísticas KPI -->
+    <div class="row g-4 mb-4">
+        <div class="col-md-3">
+            <StatCard Icon="bi-shield-shaded" Value="@teamsCount.ToString()" Label="Equipos Registrados" />
+        </div>
+        <div class="col-md-3">
+            <StatCard Icon="bi-people-fill" Value="@playersCount.ToString()" Label="Jugadores Activos" />
+        </div>
+        <div class="col-md-3">
+            <StatCard Icon="bi-calendar-event-fill" Value="@matchesCount.ToString()" Label="Partidos en Calendario" />
+        </div>
+        <div class="col-md-3">
+            <StatCard Icon="bi-geo-alt-fill" Value="@citiesCount.ToString()" Label="Ciudades Sedes" />
+        </div>
+    </div>
+
+    <!-- Próximos Partidos y Calendario Rápido -->
+    <div class="sports-card mb-4">
+        <div class="sports-card-header">
+            <div class="d-flex align-items-center gap-2">
+                <i class="bi bi-calendar-check-fill text-warning fs-5"></i>
+                <h2 class="sports-card-title">Encuentros y Calendario de la Liga</h2>
+            </div>
+            <a href="matches" class="btn btn-yellow btn-sm">Ver Todo el Calendario</a>
+        </div>
+
+        @if (matches.Any())
+        {
+            <div class="row g-3">
+                @foreach (var match in matches.Take(3))
+                {
+                    <div class="col-md-4">
+                        <div class="p-3 rounded-3 h-100" style="background-color: var(--c-black-surface); border: 1px solid var(--c-gray-border);">
+                            <div class="d-flex align-items-center justify-content-between mb-2">
+                                <small class="text-white-50">@match.MatchDate.ToString("dd/MM/yyyy - hh:mm tt")</small>
+                                @if (match.Status == "Cancelado")
+                                {
+                                    <span class="badge badge-gray text-danger border-danger" style="font-size: 0.7rem;">
+                                        <i class="bi bi-x-circle me-1 text-danger"></i> Cancelado
+                                    </span>
+                                }
+                                else if (match.Status == "Finalizado")
+                                {
+                                    <span class="badge badge-gray" style="font-size: 0.7rem;">
+                                        <i class="bi bi-check-circle me-1 text-success"></i> Finalizado
+                                    </span>
+                                }
+                                else if (match.Status == "En Curso")
+                                {
+                                    <span class="badge badge-yellow" style="font-size: 0.7rem;">
+                                        <i class="bi bi-broadcast me-1"></i> En Vivo
+                                    </span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-yellow" style="font-size: 0.7rem;">
+                                        <i class="bi bi-clock me-1"></i> Programado
+                                    </span>
+                                }
+                            </div>
+                            <div class="d-flex align-items-center justify-content-between text-center my-2">
+                                <span class="fw-bold text-white small" style="width: 42%;">@match.HomeTeamName</span>
+                                @if (match.Status == "Finalizado" || match.Status == "En Curso")
+                                {
+                                    <span class="badge badge-yellow px-2 py-1">@(match.HomeScore ?? 0) - @(match.AwayScore ?? 0)</span>
+                                }
+                                else
+                                {
+                                    <span class="badge badge-gray px-2 py-1">VS</span>
+                                }
+                                <span class="fw-bold text-white small" style="width: 42%;">@match.AwayTeamName</span>
+                            </div>
+
+                            <div class="text-center mt-2">
+                                <small class="text-white-50" style="font-size: 0.75rem;">
+                                    <i class="bi bi-geo-alt text-warning me-1"></i>@match.Location
+                                </small>
+                            </div>
+                        </div>
+                    </div>
+                }
+            </div>
+        }
+        else
+        {
+            <div class="text-center py-4 text-white-50">
+                <i class="bi bi-calendar-x fs-2 d-block mb-2"></i>
+                No hay partidos programados en el calendario.
+            </div>
+        }
+    </div>
+
+    <!-- Sección de Vistas Rápidas de Equipos y Jugadores -->
+    <div class="row g-4 mb-4">
+        <!-- Equipos Destacados -->
+        <div class="col-lg-6">
+            <div class="sports-card h-100">
+                <div class="sports-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-shield-fill text-warning fs-5"></i>
+                        <h2 class="sports-card-title">Equipos de la Liga</h2>
+                    </div>
+                    <a href="teams" class="btn btn-sports-dark btn-sm">Ver Todos</a>
+                </div>
+
+                @if (teams.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="sports-table">
+                            <thead>
+                                <tr>
+                                    <th>Equipo</th>
+                                    <th>Ciudad</th>
+                                    <th class="text-center">Plantilla</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var team in teams.Take(5))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-shield text-warning"></i>
+                                                <strong class="text-white">@team.Name</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge badge-gray">@team.City</span></td>
+                                        <td class="text-center">
+                                            <span class="badge badge-yellow">@team.PlayerCount Jugadores</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-white-50">
+                        <i class="bi bi-inbox fs-2 d-block mb-2"></i>
+                        No hay equipos registrados aún.
+                    </div>
+                }
+            </div>
+        </div>
+
+        <!-- Jugadores Recientes -->
+        <div class="col-lg-6">
+            <div class="sports-card h-100">
+                <div class="sports-card-header">
+                    <div class="d-flex align-items-center gap-2">
+                        <i class="bi bi-person-badge-fill text-warning fs-5"></i>
+                        <h2 class="sports-card-title">Jugadores Registrados</h2>
+                    </div>
+                    <a href="players" class="btn btn-sports-dark btn-sm">Ver Todos</a>
+                </div>
+
+                @if (players.Any())
+                {
+                    <div class="table-responsive">
+                        <table class="sports-table">
+                            <thead>
+                                <tr>
+                                    <th>Jugador</th>
+                                    <th>Posición</th>
+                                    <th>Equipo</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                                @foreach (var player in players.Take(5))
+                                {
+                                    <tr>
+                                        <td>
+                                            <div class="d-flex align-items-center gap-2">
+                                                <i class="bi bi-person-fill text-white-50"></i>
+                                                <strong class="text-white">@player.FullName</strong>
+                                            </div>
+                                        </td>
+                                        <td><span class="badge badge-gray">@player.Position</span></td>
+                                        <td>
+                                            <span class="badge badge-yellow">@(player.TeamName ?? "Asignado")</span>
+                                        </td>
+                                    </tr>
+                                }
+                            </tbody>
+                        </table>
+                    </div>
+                }
+                else
+                {
+                    <div class="text-center py-4 text-white-50">
+                        <i class="bi bi-person-x fs-2 d-block mb-2"></i>
+                        No hay jugadores registrados aún.
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+}
+
+@code {
+    private bool isLoading = true;
+    private List<TeamDto> teams = new();
+    private List<PlayerDto> players = new();
+    private List<MatchDto> matches = new();
+
+    private int teamsCount => teams.Count;
+    private int playersCount => players.Count;
+    private int matchesCount => matches.Count;
+    private int citiesCount => teams.Select(t => t.City).Distinct(StringComparer.OrdinalIgnoreCase).Count();
+
+    protected override async Task OnInitializedAsync()
+    {
+        await LoadDashboardData();
+    }
+
+    private async Task LoadDashboardData()
+    {
+        isLoading = true;
+        try
+        {
+            var teamsTask = ApiService.GetTeamsAsync();
+            var playersTask = ApiService.GetPlayersAsync();
+            var matchesTask = ApiService.GetMatchesAsync();
+
+            await Task.WhenAll(teamsTask, playersTask, matchesTask);
+
+            teams = (await teamsTask).ToList();
+            players = (await playersTask).ToList();
+            matches = (await matchesTask).ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error cargando dashboard: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+}

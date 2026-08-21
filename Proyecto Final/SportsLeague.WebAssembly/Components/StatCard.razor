@@ -1,0 +1,15 @@
+﻿<div class="stat-card">
+    <div class="stat-icon-wrapper">
+        <i class="bi @Icon"></i>
+    </div>
+    <div>
+        <div class="stat-value">@Value</div>
+        <p class="stat-label">@Label</p>
+    </div>
+</div>
+
+@code {
+    [Parameter] public string Icon { get; set; } = "bi-trophy-fill";
+    [Parameter] public string Value { get; set; } = "0";
+    [Parameter] public string Label { get; set; } = "Estadística";
+}
